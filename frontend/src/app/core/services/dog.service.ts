@@ -7,8 +7,7 @@ import { DogSummary } from '../models/dog/dog-summary.model';
 import { CreateSightingRequest } from '../models/sighting/create-sighting-request.model';
 import { Sighting } from '../models/sighting/sighting.model';
 
-const API_BASE = 'http://localhost:8080';
-
+const API_BASE = '';
 @Injectable({ providedIn: 'root' })
 export class DogService {
 

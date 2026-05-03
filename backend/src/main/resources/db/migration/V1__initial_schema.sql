@@ -1,5 +1,5 @@
 CREATE TABLE dog (
-    id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id                    BIGSERIAL PRIMARY KEY,
     name                  VARCHAR(100),
     size                  VARCHAR(20)  NOT NULL,
     color                 VARCHAR(60)  NOT NULL,
@@ -7,13 +7,13 @@ CREATE TABLE dog (
     photo_filename        VARCHAR(255),
     initial_health_status VARCHAR(30)  NOT NULL,
     initial_area_label    VARCHAR(200),
-    initial_latitude      DOUBLE,
-    initial_longitude     DOUBLE,
+    initial_latitude      DOUBLE PRECISION,
+    initial_longitude     DOUBLE PRECISION,
     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE app_user (
-    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id            BIGSERIAL PRIMARY KEY,
     email         VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     display_name  VARCHAR(100) NOT NULL,
@@ -23,13 +23,13 @@ CREATE TABLE app_user (
 CREATE INDEX idx_user_email ON app_user(email);
 
 CREATE TABLE sighting (
-    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id             BIGSERIAL PRIMARY KEY,
     dog_id         BIGINT       NOT NULL,
     health_status  VARCHAR(30)  NOT NULL,
     note           VARCHAR(1000),
     area_label     VARCHAR(200),
-    latitude       DOUBLE,
-    longitude      DOUBLE,
+    latitude       DOUBLE PRECISION,
+    longitude      DOUBLE PRECISION,
     photo_filename VARCHAR(255),
     reporter_id    BIGINT,
     reported_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,

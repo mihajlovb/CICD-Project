@@ -7,7 +7,7 @@ import { AuthUser } from "../models/auth/auth-user.model";
 import { LoginRequest } from "../models/auth/login-request.model";
 import { RegisterRequest } from "../models/auth/register-request.model";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = '';
 const TOKEN_KEY = "jwt_token";
 const USER_KEY = "pawid_user";
 

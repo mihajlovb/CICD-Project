@@ -1,0 +1,79 @@
+services:
+
+  # ─────────────────────────────────────────
+  # PostgreSQL database
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    container_name: pawid-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pawid
+      POSTGRES_USER: pawid
+      POSTGRES_PASSWORD: pawid
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pawid -d pawid"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pawid-network
+
+  # ─────────────────────────────────────────
+  # Spring Boot backend
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pawid-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pawid
+      DB_USER: pawid
+      DB_PASSWORD: pawid
+      JWT_SECRET: change-this-to-a-very-long-random-secret-key-in-production
+      UPLOADS_DIR: /app/uploads
+      CORS_ORIGINS: http://localhost
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pawid-network
+
+  # ─────────────────────────────────────────
+  # Angular frontend (served by nginx)
+  # ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pawid-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pawid-network
+
+# ─────────────────────────────────────────
+# Named volumes — data persists across restarts
+# ─────────────────────────────────────────
+volumes:
+  postgres_data:
+  uploads_data:
+
+# ─────────────────────────────────────────
+# Internal network — containers talk to each
+# other by service name (postgres, backend)
+# ─────────────────────────────────────────
+networks:
+  pawid-network:
+    driver: bridge
