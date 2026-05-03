@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pawid-config
+  namespace: pawid
+data:
+  DB_HOST: postgres-service
+  DB_PORT: "5432"
+  DB_NAME: pawid
+  DB_USER: pawid
+  UPLOADS_DIR: /app/uploads
+  CORS_ORIGINS: http://localhost
