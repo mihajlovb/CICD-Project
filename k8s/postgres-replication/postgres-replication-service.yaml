@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-replica-service
+  namespace: pawid
+  labels:
+    app: postgres-replica
+    role: replica
+spec:
+  selector:
+    app: postgres-replica
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  # ClusterIP — replica е read-only, достапна само внатре во кластерот
+  type: ClusterIP

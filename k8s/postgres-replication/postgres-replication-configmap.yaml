@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-replication-config
+  namespace: pawid
+data:
+  # Конфигурација за primary — вклучена во postgresql.auto.conf преку include_dir
+  # Ова овозможува WAL streaming кон replica
+  postgresql.conf: |
+    wal_level = replica
+    max_wal_senders = 3
+    max_replication_slots = 3
+    hot_standby = on
+    wal_keep_size = 128
+
+  # Иницијализациска скрипта за PRIMARY — се извршува само еднаш при прв старт
+  # Ги поставува pg_hba.conf правилата и го создава replicator user-от
+  init-replication.sh: |
+    #!/bin/bash
+    set -e
+    echo "Setting up replication user on primary..."
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'replicator') THEN
+          CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '$REPLICATION_PASSWORD';
+        END IF;
+      END
+      \$\$;
+    EOSQL
+
+    # Дозволи репликација во pg_hba.conf
+    echo "host replication replicator all md5" >> "$PGDATA/pg_hba.conf"
+    echo "Primary replication setup complete."
+
+  # Скрипта која REPLICA ја извршува при старт
+  # Ако replica веќе е иницијализирана, само старта.
+  # Ако не — прави pg_basebackup од primary и поставува standby.signal.
+  init-replica.sh: |
+    #!/bin/bash
+    set -e
+
+    PRIMARY_HOST="postgres-service.pawid.svc.cluster.local"
+    PRIMARY_PORT="5432"
+    PGDATA="/var/lib/postgresql/data"
+    REPL_USER="replicator"
+    REPL_PASS="${REPLICATION_PASSWORD}"
+
+    # Ако веќе постои иницијализирана база, само старта
+    if [ -f "$PGDATA/PG_VERSION" ]; then
+      echo "Replica already initialized, starting..."
+      exec postgres
+    fi
+
+    echo "Waiting for primary to be ready..."
+    until pg_isready -h "$PRIMARY_HOST" -p "$PRIMARY_PORT" -U pawid; do
+      sleep 3
+    done
+
+    echo "Running pg_basebackup from primary..."
+    PGPASSWORD="$REPL_PASS" pg_basebackup \
+      -h "$PRIMARY_HOST" \
+      -p "$PRIMARY_PORT" \
+      -U "$REPL_USER" \
+      -D "$PGDATA" \
+      -P -Xs -R
+
+    # Запишува конекциски стринг за streaming replication
+    cat >> "$PGDATA/postgresql.auto.conf" <<EOCONF
+    primary_conninfo = 'host=${PRIMARY_HOST} port=${PRIMARY_PORT} user=${REPL_USER} password=${REPL_PASS} application_name=pawid-replica'
+    EOCONF
+
+    # standby.signal му кажува на Postgres дека е replica (hot standby)
+    touch "$PGDATA/standby.signal"
+
+    echo "Replica initialized. Starting..."
+    exec postgres

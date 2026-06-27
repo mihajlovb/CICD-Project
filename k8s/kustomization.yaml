@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pawid
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - backend-deployment.yaml
+  - backend-service.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - ingress.yaml
+  - postgres-statefulset.yaml
+  - postgres-service.yaml
+  - postgres-replication/postgres-replication-statefulset.yaml
+  - postgres-replication/postgres-replication-service.yaml
+  - postgres-replication/postgres-replication-configmap.yaml
