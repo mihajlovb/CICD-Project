@@ -75,4 +75,6 @@ data:
     touch "$PGDATA/standby.signal"
 
     echo "Replica initialized. Starting..."
-    exec postgres
+    chown -R postgres:postgres "$PGDATA"
+    chmod 700 "$PGDATA"
+    exec gosu postgres postgres
