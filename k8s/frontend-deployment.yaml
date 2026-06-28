@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: mihajlovb/pawid-frontend:latest
+          image: mihajlovb/pawid-frontend:72f0dbeb8d1962bd3683f227b6cf5f62f5f3380d
           ports:
             - containerPort: 80
           readinessProbe:

@@ -26,7 +26,7 @@ spec:
               done
       containers:
         - name: backend
-          image: mihajlovb/pawid-backend:latest
+          image: mihajlovb/pawid-backend:72f0dbeb8d1962bd3683f227b6cf5f62f5f3380d
           ports:
             - containerPort: 8080
           envFrom:
