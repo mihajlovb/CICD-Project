@@ -7,14 +7,12 @@ services:
     image: postgres:16
     container_name: pawid-postgres
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: pawid
-      POSTGRES_USER: pawid
-      POSTGRES_PASSWORD: pawid
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pawid -d pawid"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,15 +28,8 @@ services:
       dockerfile: Dockerfile
     container_name: pawid-backend
     restart: unless-stopped
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: pawid
-      DB_USER: pawid
-      DB_PASSWORD: pawid
-      JWT_SECRET: change-this-to-a-very-long-random-secret-key-in-production
-      UPLOADS_DIR: /app/uploads
-      CORS_ORIGINS: http://localhost
+    env_file:
+      - .env
     volumes:
       - uploads_data:/app/uploads
     depends_on:
@@ -64,15 +55,14 @@ services:
       - pawid-network
 
 # ─────────────────────────────────────────
-# Named volumes — data persists across restarts
+# Named volumes
 # ─────────────────────────────────────────
 volumes:
   postgres_data:
   uploads_data:
 
 # ─────────────────────────────────────────
-# Internal network — containers talk to each
-# other by service name (postgres, backend)
+# Internal network
 # ─────────────────────────────────────────
 networks:
   pawid-network:
